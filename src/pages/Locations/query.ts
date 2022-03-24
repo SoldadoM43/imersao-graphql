@@ -1,8 +1,12 @@
 import { gql } from "@apollo/client";
 
 export const GET_LOCATIONS_FILTER = gql`
-query GetLocationsWithFilter($filter: FilterLocation) {
-    locations(filter: $filter) {
+query GetLocationsWithFilter($filter: FilterLocation, $page: Int) {
+    locations(filter: $filter, page: $page) {
+        info {
+            next
+            prev
+        }
         results {
             id
             name

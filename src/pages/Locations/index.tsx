@@ -12,24 +12,16 @@ const Locations: React.FC = () => {
     handleLocationFilter("")
   },[])
 
-  const handleLocationFilter = (textFilter: string) => {
-    getLocationsFilter({variables: { filter: { name: textFilter }}})
+  const handleLocationFilter = (textFilter: string, page = 1) => {
+    getLocationsFilter({variables: { filter: { name: textFilter }, page}})
   }
 
-  const [getLocationsFilter, 
-  {
-    loading,
-    error,
-    data
-  }] = useLazyQuery<IGetLocations,IFilterGetLocation>(GET_LOCATIONS_FILTER)
+  const [
+    getLocationsFilter, { loading, error, data }
+  ] = useLazyQuery<IGetLocations,IFilterGetLocation>(GET_LOCATIONS_FILTER)
 
   const [
-    getLocation,
-    {
-      loading: locationLoading,
-      error: locationError,
-      data: locationData
-    }
+    getLocation, { loading: locationLoading, error: locationError, data: locationData }
   ] = useLazyQuery<IGetLocation>(GET_LOCATION);
 
   const handleClickOpen = () => {
@@ -40,30 +32,53 @@ const Locations: React.FC = () => {
     setOpen(false);
   };
 
+  console.log('data',data)
+
   return <>   
-    <Container maxWidth="md">
+    <Container maxWidth="lg">
     <Typography variant='h2'>Locais</Typography>
-    <Grid container style={{flexDirection: 'column', marginBottom: 16}}>
-      <TextField
-        label="Filtrar por nome"
-        fullWidth
-        value={text}
-        onChange={e => setText(e.target.value)}
-      />
+    <div style={{ display:'flex' }}>
+      <div style={{display: 'flex', flexDirection: 'row', paddingRight: 12, flex:1, alignItems:"center", marginBottom: 16}}>
+        <TextField
+          fullWidth
+          label="Filtrar por nome"
+          value={text}
+          onChange={e => setText(e.target.value)}
+        />
+        <Button
+          variant="contained"
+          color="primary"
+          style={{marginTop: 8, marginLeft: 8}}
+          onClick={() => handleLocationFilter(text)}
+        >
+          Filtrar
+        </Button>
+      </div>
+      <div>
       <Button
-        color="primary"
-        style={{marginTop: 8}}
-        onClick={() => handleLocationFilter(text)}
-      >
-        Filtrar
-      </Button>
-    </Grid>
+          variant="contained"
+          color="primary"
+          disabled={!data?.locations.info.prev}
+          onClick={() => handleLocationFilter(text, data?.locations.info.prev)}
+        >
+          Anterior
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!data?.locations.info.next}
+          onClick={() => handleLocationFilter(text, data?.locations.info.next)}
+        >
+          Próximo
+        </Button>
+      </div>
+    </div>
     <Grid container>
       {loading ? <CircularProgress/> :
       data && data.locations.results.map(item => (
-        <Grid item xs={12} sm={6} md={4} style={{padding: 16}}>
+        <Grid item xs={12} sm={4} md={3} style={{padding: 16}}>
         <Paper style={{padding: 8}}>
-          <Typography variant='h4'>{item.name}</Typography>
+          <Typography variant='h5'>{item.name}</Typography>
           <Button onClick={() => {
             handleClickOpen()
             getLocation({variables: {locationId: item.id}})
@@ -77,9 +92,14 @@ const Locations: React.FC = () => {
     </Container>
     <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
       <DialogContent>
-        <Typography variant='h4'>{locationData?.location.name}</Typography>
-        <Typography variant='h5'>{locationData?.location.type}</Typography>
-        <Typography variant='h5'>{locationData?.location.dimension}</Typography>
+        {locationLoading ? <CircularProgress/> :
+          <>
+            <Typography variant='h3'>{locationData?.location.name}</Typography>
+            <br/>
+            <Typography variant='h4'>Dimensão:{locationData?.location.dimension}</Typography>
+            <Typography variant='h5'>Tipo: {locationData?.location.type}</Typography>
+          </>
+        }
       </DialogContent>
     </Dialog>
   </>

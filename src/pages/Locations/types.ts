@@ -1,6 +1,9 @@
+import { IPaginable } from "../../utils/types";
+
 export interface IGetLocations {
     locations: {
         results: IGetLocationsResult[]
+        info: IPaginable;
     }
 }
 
@@ -19,8 +22,10 @@ export interface IGetLocationResult extends IAuxLocations {
 
 export interface IGetLocation {
     location: IGetLocationResult;
+    
 }
 
 export interface IFilterGetLocation {
     filter: IAuxLocations;
+    page: number;
 }
