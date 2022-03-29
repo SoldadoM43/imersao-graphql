@@ -1,8 +1,10 @@
 import { useLazyQuery } from '@apollo/client';
 import { Button, CircularProgress, Container, Dialog, DialogContent, Grid, Paper, TextField, Typography } from '@material-ui/core';
 import React, { useEffect } from 'react';
+import ViewError from '../../components/ViewError';
+import { IFilter } from '../../utils/types';
 import { GET_LOCATION, GET_LOCATIONS_FILTER } from './query';
-import { IFilterGetLocation, IGetLocation, IGetLocations } from './types';
+import { IGetLocation, IGetLocations, IGetLocationFilter } from './types';
 
 const Locations: React.FC = () => {
   const [open, setOpen] = React.useState(false);
@@ -18,11 +20,11 @@ const Locations: React.FC = () => {
 
   const [
     getLocationsFilter, { loading, error, data }
-  ] = useLazyQuery<IGetLocations,IFilterGetLocation>(GET_LOCATIONS_FILTER)
+  ] = useLazyQuery<IGetLocations, IFilter>(GET_LOCATIONS_FILTER)
 
   const [
     getLocation, { loading: locationLoading, error: locationError, data: locationData }
-  ] = useLazyQuery<IGetLocation>(GET_LOCATION);
+  ] = useLazyQuery<IGetLocation, IGetLocationFilter>(GET_LOCATION);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -31,8 +33,6 @@ const Locations: React.FC = () => {
   const handleClose = () => {
     setOpen(false);
   };
-
-  console.log('data',data)
 
   return <>   
     <Container maxWidth="lg">
@@ -74,8 +74,11 @@ const Locations: React.FC = () => {
       </div>
     </div>
     <Grid container>
-      {loading ? <CircularProgress/> :
-      data && data.locations.results.map(item => (
+      {error && <ViewError>{error.message}</ViewError>}
+      
+      {loading && <CircularProgress/> }
+      
+      {data && data.locations.results.map(item => (
         <Grid item xs={12} sm={4} md={3} style={{padding: 16}}>
         <Paper style={{padding: 8}}>
           <Typography variant='h5'>{item.name}</Typography>
@@ -92,12 +95,16 @@ const Locations: React.FC = () => {
     </Container>
     <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
       <DialogContent>
-        {locationLoading ? <CircularProgress/> :
+        {locationError && <ViewError>{locationError.message}</ViewError> }
+        
+        {locationLoading && <CircularProgress/> }
+        
+        {locationData && 
           <>
-            <Typography variant='h3'>{locationData?.location.name}</Typography>
+            <Typography variant='h3'>{locationData.location.name}</Typography>
             <br/>
-            <Typography variant='h4'>Dimensão:{locationData?.location.dimension}</Typography>
-            <Typography variant='h5'>Tipo: {locationData?.location.type}</Typography>
+            <Typography variant='h4'>Dimensão:{locationData.location.dimension}</Typography>
+            <Typography variant='h5'>Tipo: {locationData.location.type}</Typography>
           </>
         }
       </DialogContent>

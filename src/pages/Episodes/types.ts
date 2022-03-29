@@ -19,11 +19,9 @@ export interface IEpisode extends IAuxEpisodes {
 }
 
 export interface IGetEpisode {
-    episode: IEpisode;
-    
+    episode: IEpisode;    
 }
 
-export interface IFilterGetEpisodes {
-    filter: Omit<IAuxEpisodes,'id'>;
-    page: number;
+export interface IGetEpisodeFilter {
+    episodeId: string;
 }

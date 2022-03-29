@@ -1,9 +1,11 @@
 import { useLazyQuery } from '@apollo/client';
 import { Button, CircularProgress, Container, Dialog, DialogContent, Grid, Paper, TextField, Typography } from '@material-ui/core';
 import React, { useEffect } from 'react';
+import ViewError from '../../components/ViewError';
+import { IFilter } from '../../utils/types';
 
 import {GET_EPISODE, GET_EPISODES_FILTER} from './query'
-import { IGetEpisodes, IFilterGetEpisodes, IGetEpisode } from './types'
+import { IGetEpisodes, IGetEpisode, IGetEpisodeFilter } from './types'
 
 const Episodes: React.FC = () => {
   const [open, setOpen] = React.useState(false);
@@ -19,11 +21,11 @@ const Episodes: React.FC = () => {
 
   const [
     getEpisodesFilter, { loading, error, data }
-  ] = useLazyQuery<IGetEpisodes, IFilterGetEpisodes>(GET_EPISODES_FILTER)
+  ] = useLazyQuery<IGetEpisodes, IFilter>(GET_EPISODES_FILTER)
 
   const [
     getEpisode, { loading: loadingEpisode, error: errorEpisode, data: dataEpisode }
-  ] = useLazyQuery<IGetEpisode>(GET_EPISODE)
+  ] = useLazyQuery<IGetEpisode, IGetEpisodeFilter>(GET_EPISODE)
 
     const handleClickOpen = () => {
     setOpen(true);
@@ -32,6 +34,25 @@ const Episodes: React.FC = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const viewBody = () => {
+    return <>
+    {loading ? <CircularProgress/> :
+      data && data.episodes.results.map(item => (
+        <Grid item xs={12} sm={4} md={3} style={{padding: 16}}>
+        <Paper style={{padding: 8}}>
+          <Typography variant='h5'>{item.name}</Typography>
+          <Button onClick={() => {
+            handleClickOpen()
+            getEpisode({variables: {episodeId: item.id}})
+          }}>
+            Ver mais
+          </Button>
+        </Paper>
+      </Grid>
+      ))}
+    </>
+  }
 
   return <>   
     <Container maxWidth="lg">
@@ -73,25 +94,17 @@ const Episodes: React.FC = () => {
       </div>
     </div>
     <Grid container>
-      {loading ? <CircularProgress/> :
-      data && data.episodes.results.map(item => (
-        <Grid item xs={12} sm={4} md={3} style={{padding: 16}}>
-        <Paper style={{padding: 8}}>
-          <Typography variant='h5'>{item.name}</Typography>
-          <Button onClick={() => {
-            handleClickOpen()
-            getEpisode({variables: {episodeId: item.id}})
-          }}>
-            Ver mais
-          </Button>
-        </Paper>
-      </Grid>
-      ))}
+      {data && viewBody()}
+      {error && <ViewError>{error.message}</ViewError>}
     </Grid>   
     </Container>
     <Dialog onClose={handleClose} aria-labelledby="simple-dialog-title" open={open}>
       <DialogContent>
-        {loadingEpisode ? <CircularProgress/> :
+        {errorEpisode && <ViewError>{errorEpisode.message}</ViewError>}
+
+        {loadingEpisode && <CircularProgress/> }
+
+        {dataEpisode && (
           <>
             <Typography variant='h3'>{dataEpisode?.episode.name}</Typography>
             <br/>
@@ -99,7 +112,7 @@ const Episodes: React.FC = () => {
             <Typography variant='h5'>Data: {dataEpisode?.episode.air_date}</Typography>
             <Typography variant='h5'>Criado em: {dataEpisode?.episode.created}</Typography>
           </>
-        }
+        )}        
       </DialogContent>
     </Dialog>
   </>
